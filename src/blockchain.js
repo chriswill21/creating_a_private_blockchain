@@ -66,10 +66,11 @@ class Blockchain {
 
         return new Promise(async (resolve, reject) => {
             try {
-                let chainHeight = await self.getChainHeight()
-                let prevBlock = await self.getChainHeight(chainHeight)
 
-                block.previousBlockHash = SHA256(JSON.stringify(prevBlock)).toString()
+                let chainHeight = await self.getChainHeight()
+                let prevBlock = await self.getBlockByHeight(chainHeight)
+
+                block.previousBlockHash = prevBlock.hash
                 block.height = chainHeight + 1
                 block.time = new Date().getTime().toString().slice(0, -3);
 
@@ -81,6 +82,8 @@ class Blockchain {
                 // Update chain
                 self.height = self.height + 1
                 self.chain.push(block)
+
+                await self.validateChain()
 
                 resolve(block)
 
@@ -126,7 +129,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             let time = parseInt(message.split(':')[1])
             let currentTime = parseInt(new Date().getTime().toString().slice(0, -3))
-            let validTime = currentTime - time < 300000
+            let validTime = currentTime - time < 300
             let verifiedMessage = bitcoinMessage.verify(message, address, signature)
             let newBlock = new BlockClass.Block({star: star, owner: address})
             if (validTime && verifiedMessage) {
@@ -212,11 +215,11 @@ class Blockchain {
 
                 // Check the with the previousBlockHash to make sure the chain isn't broken
                 let loggedLastBlockHash = currentBlock.previousBlockHash
-                let lastBlockHash = SHA256(JSON.stringify(lastBlock)).toString()
+                let lastBlockHash = lastBlock.hash
                 if (!lastBlockHash === loggedLastBlockHash) {
                     errorLog.push(new Error('Chain broken at block: ${currentBlock.hash}.'))
                 } // Check if current block is valid
-                else if (! currentBlock.validate())
+                else if (! await currentBlock.validate())
                 {
                     errorLog.push(new Error('Invalid block: ${currentBlock.hash}.'))
                 }

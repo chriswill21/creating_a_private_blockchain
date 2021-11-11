@@ -32,7 +32,19 @@ class BlockchainController {
             } else {
                 return res.status(404).send("Block Not Found! Review the Parameters!");
             }
-            
+
+        });
+    }
+
+    // Enpoint to Validate the block chain
+    validateBlockChain() {
+        this.app.get("/validate", async (req, res) => {
+            let isValid = await this.blockchain.validateChain();
+            if (isValid) {
+                return res.status(200).json(true);
+            } else {
+                return res.status(404).send("Chain is invalid!");
+            }
         });
     }
 
