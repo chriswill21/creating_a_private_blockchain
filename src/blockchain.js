@@ -83,7 +83,11 @@ class Blockchain {
                 self.height = self.height + 1
                 self.chain.push(block)
 
-                await self.validateChain()
+                await self.validateChain().then((errs) => {
+                    if (errs.length > 0) {
+                        reject(new Error('Failed to add new block to the blockchain.'))
+                    }
+                })
 
                 resolve(block)
 

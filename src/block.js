@@ -49,7 +49,14 @@ class Block {
 
             let currentHash = self.hash
 
-            let newHash = SHA256(JSON.stringify(self)).toString()
+            let newHash = SHA256(
+                JSON.stringify(
+                    {
+                        ...self,
+                        "hash": null
+                    }
+                )
+            ).toString();
 
             if (currentHash === newHash) {
                 resolve(true)
